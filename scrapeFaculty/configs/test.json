@@ -1,0 +1,13 @@
+{ 	"school": "mitsloan", 
+	"url": "http://mitsloan.mit.edu/faculty-and-research/faculty-directory/",
+	"home": "C:/Data/scrapeFaculty",
+	"tagLvl_0": "['div', 'div']",
+	"tagClassLvl_0": "['left-column', 'right-column']",
+	"tagLvl_1": "['a', 'span']",
+	"tagClassLvl_1": "['', '']",
+
+	"personalTagLvl_0": "['ul', 'ul']",
+	"personalTagClassLvl_0": "['contact-info', 'contact-info']",
+	"personalTagLvl_1": "['label', 'label']",
+	"personalTagClassLvl_1": "['ct100_content_office', 'ct100_content_email']"
+}
