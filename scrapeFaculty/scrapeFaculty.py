@@ -2,7 +2,10 @@
 
 from bs4 import BeautifulSoup #scrape library
 import urllib.request #url library
+import os
 import csv #csv writing
+import xlsxwriter
+
 from datetime import date #for dates
 import json #for json configs
 import sys #for console interaction
@@ -26,7 +29,7 @@ if len(sys.argv) != 2:
 
 configPath = sys.argv[1] #sys.argv[0] is the program, i.e. scrapeFaculty.py
 #Load the config
-configFile = open("C:/github/scrapeFaculty/scrapeFaculty/configs/test.json")
+#configFile = open("C:/github/scrapeFaculty/scrapeFaculty/configs/test.json")
 with open(configPath) as jsonFile:
 	config = json.load(jsonFile)
 
@@ -39,32 +42,48 @@ tagClassLvl_0 = config['tagClassLvl_0']
 tagLvl_1 = config['tagLvl_1']
 tagClassLvl_1 = config['tagClassLvl_1']
 
-personalTagLvl_0 = config['personalTagLvl_0']
-personalTagClass_0 = config['personalTagClass_0']
-personalTagLvl_1 = config['personalTagLvl_1']
-personalTagClass_1 = config['personalTagClass_1']
+pTagLvl_0 = config['pTagLvl_0']
+pTagClass_0 = config['pTagClassLvl_0']
+pTagLvl_1 = config['pTagLvl_1']
+pTagClass_1 = config['pTagClassLvl_1']
 
 ### Constants.
 today = date.today()
 outputPath = "C:/Data/scrapeFaculty/{0}_{1}.csv".format(school, today.strftime("%Y_%m_%d"))
-
+outputPath1 = "C:/Data/scrapeFaculty/{0}_{1}.xlsx".format(school, today.strftime("%Y_%m_%d"))
 def fetchUrl(url):
 	### Create the Soup Object.
 	response = urllib.request.urlopen(url)
 	#print(response.info())
 	html = response.read()
 	response.close()
-	return BeautifulSoup(html, 'html.parser')
+	return BeautifulSoup(html.decode('utf-8','ignore'), 'html.parser')
 	#print(soup.prettify())
+
+def pUrlScraper(url, lname):
+	imgPath = "{0}/images/{1}.jpg".format(home, lname.strip())
+	if(!os.path.exists(imgPath)):
+		#MAKE THIS A TRY, because it might fail
+		pSoup = fetchUrl(url)
+		imgUrl = pSoup.find_all('img', {'class': 'alignleft'})[0]['src']	
+		urllib.request.urlretrieve(imgUrl, imgPath)
+	#pLvl_00 = pSoup.find_all(pTagLvl_0[0], {'class': p})
+	return imgPath
 
 ### Fetch url.
 print("Fetching {0} data.".format(school))
 soup = fetchUrl(url)
-
+#print(soup.prettify().encode('UTF-8'))
 ### Create output file.
-outputFile = open(outputPath, 'w', newline='')
-outputWriter = csv.writer(outputFile)
+# Create an new Excel file and add a worksheet.
+workbook = xlsxwriter.Workbook(outputPath1)
+worksheet = workbook.add_worksheet("data")
+worksheet.write_row('A1', ("name", "title", "personal Url", "personal Image"))
 
+
+#outputFile = open(outputPath, 'w', newline='')
+#outputWriter = csv.writer(outputFile)
+#outputWriter.writerow("name", "title", "personal Url")
 
 ### Get tags.
 lvl_00 = soup.find_all(tagLvl_0[0], {'class' : tagClassLvl_0[0]})
@@ -74,18 +93,19 @@ for i in range(0, len(lvl_00)):
 	lvl11 = lvl_01[i].find_all(tagLvl_1[1], {'class': tagClassLvl_1[1]})
 	for j in range(0, len(lvl10)):
 		name = lvl10[j].getText()
+		[fname, lname] = name.split(',')
 		title = lvl11[j].getText()
-		personalUrl = "http://mitsloan.mit.edu" + lvl10[j]['href']
-		print("Name: {0}, Title: {1}, Website: {2}".format(name, title, personalUrl))
-		### Call personalUrl Scraper
-		print("Fetching personal Url for {0}.".format(Name))
-		personalUrlScraper(personalUrl)
-		outputWriter.writerow(name, title, personalUrl)
-outputFile.close()
-print("Finished writing {0} data.".format(school))
+		pUrl = "http://mitsloan.mit.edu" + lvl10[j]['href']
+		#print("Name: {0}, Title: {1}, Website: {2}".format(name, title, pUrl))
+		### Call pUrl Scraper
+		print("Fetching personal Url for {0}.".format(name))
+		pIm = pUrlScraper(pUrl, lname)
+		#outputWriter.writerow([name, title, pUrl])
+		worksheet.write_row("A{0}".format(i+1), (name, title, pUrl, pIm))
+workbook.close()
+#outputFile.close()
 
-### Scrape Personal websites
-#example: http://mitsloan.mit.edu/faculty-and-research/faculty-directory/detail/?id=9051
+print("Finished writing {0} data.".format(school))
 
 
 #Example: 
@@ -107,4 +127,3 @@ def htmlScraper(html_doc, tagList, tagAttList):
 			html_docs = html_doc.find_all(tagList[i], {tagAttList[i]})
 			for html_doc in html_docs:
 				UrlScraper(html_doc, tagList[1:], tagAtt[1:])
-

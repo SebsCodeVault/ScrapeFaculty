@@ -1,7 +1,0 @@
-school	mitsloan
-url	http://mitsloan.mit.edu/faculty-and-research/faculty-directory/
-home	C:/Data/scrapeFaculty
-tagLvl_0	['div', 'div']
-tagClassLvl_0	['left-column', 'right-column']
-tagLvl_1	['a', 'span']
-tagClassLvl_1	['', '']
